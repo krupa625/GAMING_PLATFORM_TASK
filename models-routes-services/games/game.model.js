@@ -26,7 +26,7 @@ const GameScoreSchema = new mongoose.Schema(
   { timestamps: { createdAt: "dCreatedAt", updatedAt: "dUpdatedAt" } }
 );
 
-// module.exports = mongoose.model("Game", GameSchema);
+
 module.exports = {
   Game: mongoose.model("Game", GameSchema),
   GameScore: mongoose.model("GameScore", GameScoreSchema),

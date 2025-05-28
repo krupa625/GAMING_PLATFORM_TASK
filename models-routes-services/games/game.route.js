@@ -15,7 +15,7 @@ router.put(
 router.get("/admin/games", authenticateToken, controller.getAll);
 router.delete("/admin/games/:id", authenticateToken, controller.remove);
 
-router.get("/user/games", controller.getAll);
+router.get("/user/games", authenticateToken,controller.getAll);
 router.get("/user/games/search", authenticateToken, controller.search);
 router.get("/user/games/:id", authenticateToken, controller.getById);
 router.get("/user/games/:id/play", authenticateToken, controller.play);
