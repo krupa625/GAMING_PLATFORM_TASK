@@ -1,112 +1,127 @@
 const service = require("./game.service");
 const { STATUS_CODES } = require("../../helper/statuscode");
 
+
 const create = async (req, res) => {
   try {
-    const oExisting = await service.isGameExists(req.body.sName);
-    if (oExisting) {
-      return res
-        .status(STATUS_CODES.ResourceExist)
-        .json({ error: "Game with this name already exists" });
+    const existingGame = await service.isGameExists(req.body.sName);
+    if (existingGame) {
+      return res.status(STATUS_CODES.ResourceExist).json({
+        error: "Game with this name already exists",
+      });
     }
 
-    const oGame = await service.createGame(req.body);
-    res.status(STATUS_CODES.Create).json(oGame);
-  } catch (oErr) {
-    res.status(STATUS_CODES.BadRequest).json({ error: oErr.message });
+    const newGame = await service.createGame(req.body);
+    return res.status(STATUS_CODES.Create).json(newGame);
+  } catch (error) {
+    return res.status(STATUS_CODES.BadRequest).json({ error: error.message });
   }
 };
+
 
 const getAll = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
     const skip = (page - 1) * limit;
 
-    const aGames = await service.getAllGames(skip, limit);
-    const totalGames = await service.getTotalGamesCount();
+    const games = await service.getGames(req.query, skip, limit);
+    const totalGames = await service.getGamesCount(req.query);
 
-    res.status(200).json({
+    return res.status(STATUS_CODES.OK).json({
       totalGames,
       currentPage: page,
       totalPages: Math.ceil(totalGames / limit),
-      data: aGames,
+      data: games,
     });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } catch (error) {
+    return res.status(STATUS_CODES.InternalServerError).json({
+      error: error.message,
+    });
   }
 };
 
-const search = async (req, res) => {
-  const sName = req.query.sName;
-  if (!sName)
-    return res
-      .status(STATUS_CODES.BadRequest)
-      .json({ error: "Query 'sName' is required" });
-  const aResult = await service.searchGames(sName);
-  res.json(aResult);
-};
 
 const getById = async (req, res) => {
-  const oGame = await service.getGameById(req.params.id);
-  if (!oGame)
-    return res.status(STATUS_CODES.NotFound).json({ error: "Game not found" });
-  res.json(oGame);
+  try {
+    const game = await service.getGameById(req.params.id);
+    if (!game) {
+      return res.status(STATUS_CODES.NotFound).json({ error: "Game not found" });
+    }
+    return res.status(STATUS_CODES.OK).json(game);
+  } catch (error) {
+    return res.status(STATUS_CODES.BadRequest).json({ error: error.message });
+  }
 };
 
+
 const play = async (req, res) => {
-  const oGame = await service.getGameById(req.params.id);
-  if (!oGame)
-    return res.status(STATUS_CODES.NotFound).json({ error: "Game not found" });
-  res.json({ sPlayURL: oGame.sPlayURL });
+  try {
+    const game = await service.getGameById(req.params.id);
+    if (!game) {
+      return res.status(STATUS_CODES.NotFound).json({ error: "Game not found" });
+    }
+    return res.status(STATUS_CODES.OK).json({ sPlayURL: game.sPlayURL });
+  } catch (error) {
+    return res.status(STATUS_CODES.BadRequest).json({ error: error.message });
+  }
 };
+
 
 const update = async (req, res) => {
   try {
-    const oExisting = await service.isGameExists(req.body.sName);
-    if (oExisting) {
-      return res
-        .status(STATUS_CODES.ResourceExist)
-        .json({ error: "Game with this name already exists" });
+    const existingGame = await service.isGameExists(req.body.sName);
+    if (existingGame) {
+      return res.status(STATUS_CODES.ResourceExist).json({
+        error: "Game with this name already exists",
+      });
     }
 
-    const oUpdated = await service.updateGame(req.params.id, req.body);
-    if (!oUpdated)
-      return res
-        .status(STATUS_CODES.NotFound)
-        .json({ error: "Game not found" });
-    res.json(oUpdated);
-  } catch (oErr) {
-    res.status(STATUS_CODES.BadRequest).json({ error: oErr.message });
+    const updatedGame = await service.updateGame(req.params.id, req.body);
+    if (!updatedGame) {
+      return res.status(STATUS_CODES.NotFound).json({ error: "Game not found" });
+    }
+    return res.status(STATUS_CODES.OK).json(updatedGame);
+  } catch (error) {
+    return res.status(STATUS_CODES.BadRequest).json({ error: error.message });
   }
 };
 
+
 const remove = async (req, res) => {
-  const oDeleted = await service.deleteGame(req.params.id);
-  if (!oDeleted)
-    return res.status(STATUS_CODES.NotFound).json({ error: "Game not found" });
-  res.json({ message: "Game deleted successfully" });
+  try {
+    const deletedGame = await service.deleteGame(req.params.id);
+    if (!deletedGame) {
+      return res.status(STATUS_CODES.NotFound).json({ error: "Game not found" });
+    }
+    return res
+      .status(STATUS_CODES.OK)
+      .json({ message: "Game deleted successfully" });
+  } catch (error) {
+    return res.status(STATUS_CODES.BadRequest).json({ error: error.message });
+  }
 };
+
 
 const submitScore = async (req, res) => {
   try {
-    const oScore = await service.addGameScore({
+    const score = await service.addGameScore({
       sGameId: req.params.id,
       sUserName: req.body.sUserName,
       nScore: req.body.nScore,
     });
-    // console.log(oScore);
 
-    res.status(STATUS_CODES.Create).json({ scoreDetails: oScore });
-  } catch (oErr) {
-    res.status(STATUS_CODES.BadRequest).json({ error: oErr.message });
+    return res
+      .status(STATUS_CODES.Create)
+      .json({ scoreDetails: score });
+  } catch (error) {
+    return res.status(STATUS_CODES.BadRequest).json({ error: error.message });
   }
 };
 
 module.exports = {
   create,
   getAll,
-  search,
   getById,
   play,
   update,
