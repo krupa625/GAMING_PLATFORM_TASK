@@ -2,7 +2,13 @@ const { Game, GameScore } = require("./game.model");
 
 const createGame = async (oData) => Game.create(oData);
 
-const getAllGames = async () => Game.find({ bIsDeleted: false });
+const getAllGames = async (nSkip, nLimit) => {
+  return await Game.find({ bIsDeleted: false }).skip(nSkip).limit(nLimit);
+};
+
+const getTotalGamesCount = async () => {
+  return await Game.countDocuments({ bIsDeleted: false });
+};
 
 const searchGames = async (sName) =>
   Game.find({ sName: new RegExp(sName, "i"), bIsDeleted: false });
@@ -32,6 +38,7 @@ const addGameScore = async (oData) => {
 module.exports = {
   createGame,
   getAllGames,
+  getTotalGamesCount,
   searchGames,
   getGameById,
   updateGame,

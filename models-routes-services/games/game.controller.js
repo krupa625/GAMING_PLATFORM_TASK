@@ -18,8 +18,23 @@ const create = async (req, res) => {
 };
 
 const getAll = async (req, res) => {
-  const aGames = await service.getAllGames();
-  res.json(aGames);
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const aGames = await service.getAllGames(skip, limit);
+    const totalGames = await service.getTotalGamesCount();
+
+    res.status(200).json({
+      totalGames,
+      currentPage: page,
+      totalPages: Math.ceil(totalGames / limit),
+      data: aGames,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 const search = async (req, res) => {
